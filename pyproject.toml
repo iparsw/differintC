@@ -1,0 +1,47 @@
+[build-system]
+requires = [
+    "scikit-build-core>=0.5.1",  # or latest known stable
+    "pybind11>=2.10",
+    "setuptools",                # required by many tools
+    "wheel"                      # for building wheels
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "differintC"
+version = "0.0.1"
+description = "Fast C++ implementation of fractional calculus operators via pybind11"
+authors = [{ name = "Parsa Roshanak" }]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: C++",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Intended Audience :: Science/Research"
+]
+
+[project.urls]
+Homepage = "https://github.com/iparsw/differintC"
+Repository = "https://github.com/iparsw/differintC"
+Issues = "https://github.com/iparsw/differintC/issues"
+
+[tool.scikit-build]
+wheel.packages = ["python"]     # The folder where your .py and .cpp binding is
+build-dir = "build"             # Optional: place build here
+cmake.verbose = true            # Optional: for easier debugging
+sdist.include = ["src", "include", "python", "README.md", "LICENSE", "CMakeLists.txt"]
+install.components = ["python"] # Only install the pybind11 module, not dev headers
+
+# Optional: make version dynamic from a single file (uncomment when ready)
+# [tool.setuptools.dynamic]
+# version = { file = "python/_version.py" }

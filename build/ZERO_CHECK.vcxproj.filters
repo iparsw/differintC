@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\iparsw\Desktop\python\differintC-project-high\differintC-project\build\CMakeFiles\f9307e74cd7629ff8f2114264ba7268f\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{4BBA8A25-FF96-30BA-B658-56E9FB7939D4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
