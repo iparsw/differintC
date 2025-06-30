@@ -2,6 +2,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <algorithm>
+#include <fftw3.h>
 
 namespace differint {
 
@@ -163,32 +164,86 @@ T GLpoint(T alpha,
 }
 
 // GL over entire grid
+// Optimized GL implementation with FFT acceleration
 template <typename T>
 std::vector<T> GL(T alpha,
                   const std::vector<T>& f_vals,
                   T domain_start,
                   T domain_end,
                   std::size_t num_points) {
-    if (num_points < 1) {
-        throw std::invalid_argument("num_points must be at least 1");
-    }
-    if (domain_start > domain_end) {
-        std::swap(domain_start, domain_end);
-    }
-    if (f_vals.size() != num_points) {
-        throw std::invalid_argument("f_vals size must equal num_points");
-    }
-    T step = (domain_end - domain_start) / static_cast<T>(num_points - 1);
-    auto b = GLcoeffs(alpha, num_points - 1);
-    std::vector<T> result(num_points, T(0));
-    for (std::size_t i = 0; i < num_points; ++i) {
-        T acc = T(0);
-        // convolution-like sum
-        for (std::size_t j = 0; j <= i; ++j) {
-            acc += b[j] * f_vals[i - j];
+    if (num_points < 1) throw std::invalid_argument("num_points must be at least 1");
+    if (f_vals.size() != num_points) throw std::invalid_argument("f_vals size must equal num_points");
+    if (domain_start > domain_end) std::swap(domain_start, domain_end);
+
+    const T step = (domain_end - domain_start) / static_cast<T>(num_points - 1);
+    const auto b = GLcoeffs(alpha, num_points - 1);
+
+    // For non-double types or small inputs, use direct convolution
+    if (!std::is_same<T, double>::value || num_points < 256) { // THRESHHOLD
+        std::vector<T> result(num_points, T(0));
+        for (std::size_t i = 0; i < num_points; ++i) {
+            T acc = T(0);
+            for (std::size_t j = 0; j <= i; ++j) {
+                acc += b[j] * f_vals[i - j];
+            }
+            result[i] = std::pow(step, -alpha) * acc;
         }
-        result[i] = std::pow(step, -alpha) * acc;
+        return result;
     }
+
+    // FFT-based convolution for double precision
+    const int M = 2 * num_points - 1;
+
+    double* in1 = static_cast<double*>(fftw_malloc(sizeof(double) * M));
+    double* in2 = static_cast<double*>(fftw_malloc(sizeof(double) * M));
+    fftw_complex* out1 = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * (M/2 + 1)));
+    fftw_complex* out2 = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * (M/2 + 1)));
+    fftw_complex* out_prod = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * (M/2 + 1)));
+    double* conv_result = static_cast<double*>(fftw_malloc(sizeof(double) * M));
+
+    // Zero-padding
+    std::fill_n(in1, M, 0.0);
+    std::fill_n(in2, M, 0.0);
+    std::copy(b.begin(), b.end(), in1);
+    std::copy(f_vals.begin(), f_vals.end(), in2);
+
+    // Create plans
+    fftw_plan p1 = fftw_plan_dft_r2c_1d(M, in1, out1, FFTW_ESTIMATE);
+    fftw_plan p2 = fftw_plan_dft_r2c_1d(M, in2, out2, FFTW_ESTIMATE);
+    fftw_plan p_inv = fftw_plan_dft_c2r_1d(M, out_prod, conv_result, FFTW_ESTIMATE);
+
+    // Execute FFTs
+    fftw_execute(p1);
+    fftw_execute(p2);
+
+    // Complex multiplication
+    for (int i = 0; i <= M/2; ++i) {
+        out_prod[i][0] = out1[i][0] * out2[i][0] - out1[i][1] * out2[i][1];
+        out_prod[i][1] = out1[i][0] * out2[i][1] + out1[i][1] * out2[i][0];
+    }
+
+    // Inverse transform
+    fftw_execute(p_inv);
+
+    // Prepare result
+    const double scale = 1.0 / M;
+    const T step_power = std::pow(step, -alpha);
+    std::vector<T> result(num_points);
+    for (int i = 0; i < num_points; ++i) {
+        result[i] = static_cast<T>(conv_result[i] * scale) * step_power;
+    }
+
+    // Cleanup
+    fftw_destroy_plan(p1);
+    fftw_destroy_plan(p2);
+    fftw_destroy_plan(p_inv);
+    fftw_free(in1);
+    fftw_free(in2);
+    fftw_free(out1);
+    fftw_free(out2);
+    fftw_free(out_prod);
+    fftw_free(conv_result);
+
     return result;
 }
 
