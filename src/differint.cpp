@@ -1,7 +1,12 @@
+#ifdef _WIN32
+#define NOMINMAX  // Prevent Windows min/max macros
+#endif
+
 #include "differint.hpp"
 #include <cmath>
 #include <stdexcept>
 #include <algorithm>
+#include <type_traits>
 #include <fftw3.h>
 
 namespace differint {

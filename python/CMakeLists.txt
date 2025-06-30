@@ -8,6 +8,15 @@ target_link_libraries(differintC
     PRIVATE differint_core
 )
 
+# Windows-specific DLL handling
+if(WIN32)
+    add_custom_command(TARGET differintC POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${FFTW_ROOT}/bin/libfftw3-3.dll"
+            $<TARGET_FILE_DIR:differintC>
+    )
+endif()
+
 set_target_properties(differintC PROPERTIES
     PREFIX ""
     SUFFIX ".pyd"
