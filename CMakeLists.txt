@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(differintC VERSION 0.0.2.3 LANGUAGES CXX)
+file(READ "${PROJECT_VERSION_FILE}" VERSION_CONTENTS)
+string(REGEX MATCH "__version__ *= *[\"']([^\"']+)[\"']" _ ${VERSION_CONTENTS})
+set(PYTHON_VERSION_STRING "${CMAKE_MATCH_1}")
+project(differintC VERSION ${PYTHON_VERSION_STRING} LANGUAGES CXX)
 
 # Set compiler optimization flags
 if(MSVC)

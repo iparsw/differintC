@@ -77,4 +77,4 @@ except RuntimeError as e:
 from ._differintC import *  # type: ignore # Directly import from site-packages
 
 # Add version attribute
-__version__ = "0.0.2.3"
+from ._version import __version__

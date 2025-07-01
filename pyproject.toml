@@ -10,7 +10,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "differintC"
-version = "0.0.2.3"
+dynamic = ["version"]
 description = "Fast C++ implementation of fractional calculus operators via pybind11"
 authors = [{ name = "Parsa Roshanak" }]
 license = { text = "GPL-3.0-or-later" }  # Changed to GPL for compatibility with fftw
@@ -36,6 +36,12 @@ classifiers = [
 Homepage = "https://github.com/iparsw/differintC"
 Repository = "https://github.com/iparsw/differintC"
 Issues = "https://github.com/iparsw/differintC/issues"
+
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "differintC/_version.py"
+regex = "^__version__\\s*=\\s*['\"](?P<value>[^'\"]+)['\"]"
+
 
 [tool.scikit-build]
 wheel.packages = ["differintC"]
@@ -79,6 +85,7 @@ exclude = [
 [tool.scikit-build.cmake]
 args = [
     "-DFFTW_ROOT=thirdparty/fftw",
-    "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL"
+    "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL",
+    "-DPROJECT_VERSION_FILE=differintC/_version.py",
 ]
 
