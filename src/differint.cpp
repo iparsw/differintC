@@ -148,8 +148,9 @@ T GLpoint(T alpha,
           T domain_start,
           T domain_end,
           std::size_t num_points) {
-    if (num_points < 1) {
-        throw std::invalid_argument("num_points must be at least 1");
+    // Need at least two points to compute a meaningful step size
+    if (num_points < 2) {
+        throw std::invalid_argument("num_points must be at least 2");
     }
     if (domain_start > domain_end) {
         std::swap(domain_start, domain_end);
