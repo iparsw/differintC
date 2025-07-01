@@ -13,12 +13,12 @@ name = "differintC"
 version = "0.0.2.3"
 description = "Fast C++ implementation of fractional calculus operators via pybind11"
 authors = [{ name = "Parsa Roshanak" }]
-license = { text = "MIT" }
+license = { text = "GPL-3.0-or-later" }  # Changed to GPL for compatibility with fftw
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -26,6 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: C++",
     "Topic :: Scientific/Engineering :: Mathematics",
     "Intended Audience :: Science/Research"
@@ -40,8 +41,7 @@ Issues = "https://github.com/iparsw/differintC/issues"
 wheel.packages = ["differintC"]
 build-dir = "build"
 build.verbose = true
-install.components = ["python"]
-
+install.components = ["python", "stubs"]
 
 
 [tool.scikit-build.sdist]
@@ -59,7 +59,8 @@ include = [
     "CHANGELOG.md",
     "thirdparty/fftw/lib/libfftw3-3.lib",
     "thirdparty/fftw/bin/libfftw3-3.dll",
-    "thirdparty/fftw/include/fftw3.h"
+    "thirdparty/fftw/include/fftw3.h",
+    "differintC/_differintC.pyi"
 ]
 
 
