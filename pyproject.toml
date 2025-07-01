@@ -1,15 +1,16 @@
 [build-system]
 requires = [
-    "scikit-build-core>=0.5.1",  # or latest known stable
+    "scikit-build-core>=0.11.5",
     "pybind11>=2.10",
-    "setuptools",                # required by many tools
-    "wheel"                      # for building wheels
+    "setuptools",
+    "wheel",
+    "numpy"
 ]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "differintC"
-version = "0.0.1"
+version = "0.0.2.1"
 description = "Fast C++ implementation of fractional calculus operators via pybind11"
 authors = [{ name = "Parsa Roshanak" }]
 license = { text = "MIT" }
@@ -36,12 +37,26 @@ Repository = "https://github.com/iparsw/differintC"
 Issues = "https://github.com/iparsw/differintC/issues"
 
 [tool.scikit-build]
-wheel.packages = ["python"]     # The folder where your .py and .cpp binding is
-build-dir = "build"             # Optional: place build here
-cmake.verbose = true            # Optional: for easier debugging
-sdist.include = ["src", "include", "python", "README.md", "LICENSE", "CMakeLists.txt"]
-install.components = ["python"] # Only install the pybind11 module, not dev headers
+wheel.packages = ["differintC"]
+build-dir = "build"
+build.verbose = true
+sdist.include = [
+    "src",
+    "include",
+    "python",
+    "thirdparty/fftw",  # Include entire FFTW directory
+    "differintC",
+    "differintC/libfftw3-3.dll",  # Explicitly include DLL
+    "CMakeLists.txt",
+    "README.md",
+    "LICENSE",
+]
+install.components = ["python"]
 
-# Optional: make version dynamic from a single file (uncomment when ready)
-# [tool.setuptools.dynamic]
-# version = { file = "python/_version.py" }
+
+[tool.scikit-build.cmake]
+args = [
+    "-DFFTW_ROOT=thirdparty/fftw",
+    "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL"
+]
+

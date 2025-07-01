@@ -1,0 +1,4 @@
+include thirdparty/fftw/bin/libfftw3-3.dll
+include thirdparty/fftw/lib/libfftw3-3.lib
+include thirdparty/fftw/include/fftw3.h
+recursive-include differintC *

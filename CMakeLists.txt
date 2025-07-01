@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(differintC VERSION 0.1 LANGUAGES CXX)
+project(differintC VERSION 0.0.2.1 LANGUAGES CXX)
 
 # Set compiler optimization flags
 if(MSVC)
@@ -12,16 +12,35 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Windows-specific FFTW setup
-if(WIN32)
-    set(FFTW_ROOT ${CMAKE_SOURCE_DIR}/thirdparty/fftw)
-    set(FFTW_INCLUDE_DIRS ${FFTW_ROOT}/include)
-    set(FFTW_LIBRARIES ${FFTW_ROOT}/lib/libfftw3-3.lib)
+# Robust FFTW setup
+set(FFTW_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fftw")
+set(FFTW_INCLUDE_DIRS "${FFTW_ROOT}/include")
 
-    # Copy DLL to output directory
-    file(COPY ${FFTW_ROOT}/bin/libfftw3-3.dll
-         DESTINATION ${CMAKE_BINARY_DIR}
-    )
+# Check if we're in a temporary build directory
+if(NOT EXISTS "${FFTW_ROOT}/lib/libfftw3-3.lib")
+    # Try to find FFTW in the source directory
+    set(FFTW_ROOT_SOURCE "${CMAKE_SOURCE_DIR}/thirdparty/fftw")
+    if(EXISTS "${FFTW_ROOT_SOURCE}/lib/libfftw3-3.lib")
+        set(FFTW_ROOT "${FFTW_ROOT_SOURCE}")
+        set(FFTW_INCLUDE_DIRS "${FFTW_ROOT}/include")
+        message(STATUS "Using source FFTW directory: ${FFTW_ROOT}")
+    else()
+        # Fallback to system FFTW
+        find_package(FFTW)
+        if(FFTW_FOUND)
+            message(STATUS "Using system FFTW")
+            set(FFTW_LIBRARIES ${FFTW_LIBRARIES})
+        else()
+            message(FATAL_ERROR "FFTW not found! Please install FFTW or check the thirdparty directory.")
+        endif()
+    endif()
+endif()
+
+
+if(WIN32)
+    set(FFTW_LIBRARIES "${FFTW_ROOT}/lib/libfftw3-3.lib")
+else()
+    set(FFTW_LIBRARIES "${FFTW_ROOT}/lib/libfftw3.so")
 endif()
 
 # Pybind11
@@ -43,3 +62,6 @@ target_link_libraries(differint_core PRIVATE ${FFTW_LIBRARIES})
 
 # Add Python bindings
 add_subdirectory(python)
+
+# Mark installation component for scikit-build
+install(CODE "message(STATUS \"Installing differintC component\")" COMPONENT python)

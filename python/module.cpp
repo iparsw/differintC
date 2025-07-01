@@ -47,7 +47,7 @@ std::vector<double> prepare_fvals(py::function func, double a, double b, size_t 
 
 
 
-PYBIND11_MODULE(differintC, m) {
+PYBIND11_MODULE(_differintC, m) {
     m.doc() = "Fast fractional calculus operators in C++ with Python bindings";
 
     // RL (whole array)
