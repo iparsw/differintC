@@ -1,4 +1,32 @@
-include thirdparty/fftw/bin/libfftw3-3.dll
-include thirdparty/fftw/lib/libfftw3-3.lib
-include thirdparty/fftw/include/fftw3.h
-recursive-include differintC *
+# Include essential files
+include pyproject.toml
+include README.md
+include LICENSE
+include MANIFEST.in
+
+# Include the package source
+recursive-include differintC *.py *.dll
+
+# Include headers and C++ source
+recursive-include include *.hpp
+recursive-include src *.cpp
+recursive-include python *.cpp *.h CMakeLists.txt
+
+# Include examples and tests (optional)
+# recursive-include examples *.ipynb
+# recursive-include tests *.py *.cpp
+
+# Explicitly exclude build artifacts and binaries
+prune build
+prune dist
+prune differintC.egg-info
+prune wheel_inspect
+
+# ⚠️ Remove all of thirdparty/fftw and its binaries from sdist
+prune thirdparty/fftw
+
+# Also remove static linking files not needed at runtime
+exclude differintC/*.lib
+exclude differintC/*.exp
+exclude differintC/*.def
+exclude *.exe

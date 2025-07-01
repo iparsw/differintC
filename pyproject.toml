@@ -10,7 +10,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "differintC"
-version = "0.0.2.1"
+version = "0.0.2.3"
 description = "Fast C++ implementation of fractional calculus operators via pybind11"
 authors = [{ name = "Parsa Roshanak" }]
 license = { text = "MIT" }
@@ -40,19 +40,40 @@ Issues = "https://github.com/iparsw/differintC/issues"
 wheel.packages = ["differintC"]
 build-dir = "build"
 build.verbose = true
-sdist.include = [
-    "src",
-    "include",
-    "python",
-    "thirdparty/fftw",  # Include entire FFTW directory
-    "differintC",
-    "differintC/libfftw3-3.dll",  # Explicitly include DLL
-    "CMakeLists.txt",
-    "README.md",
-    "LICENSE",
-]
 install.components = ["python"]
 
+
+
+[tool.scikit-build.sdist]
+# Explicitly list what should go in sdist
+include = [
+    "differintC/**",
+    "include/**",
+    "src/**",
+    "python/**",
+    #"examples/**",
+    #"tests/**",
+    "README.MD",
+    "pyproject.toml",
+    "LICENSE",
+    "CHANGELOG.md",
+    "thirdparty/fftw/lib/libfftw3-3.lib",
+    "thirdparty/fftw/bin/libfftw3-3.dll",
+    "thirdparty/fftw/include/fftw3.h"
+]
+
+
+# Explicitly exclude binary & third-party build junk
+exclude = [
+  "thirdparty/**",
+  "differintC/*.lib",
+  "differintC/*.exp",
+  "differintC/*.def",
+  "*.exe",
+  "*.pyd",
+  "*.so",
+  "*.dll"
+]
 
 [tool.scikit-build.cmake]
 args = [

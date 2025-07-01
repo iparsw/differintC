@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(differintC VERSION 0.0.2.1 LANGUAGES CXX)
+project(differintC VERSION 0.0.2.3 LANGUAGES CXX)
 
 # Set compiler optimization flags
 if(MSVC)
@@ -13,28 +13,44 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Robust FFTW setup
-set(FFTW_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fftw")
+# set(FFTW_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fftw")
+# set(FFTW_INCLUDE_DIRS "${FFTW_ROOT}/include")
+#
+# # Check if we're in a temporary build directory
+# if(NOT EXISTS "${FFTW_ROOT}/lib/libfftw3-3.lib")
+#     # Try to find FFTW in the source directory
+#     set(FFTW_ROOT_SOURCE "${CMAKE_SOURCE_DIR}/thirdparty/fftw")
+#     if(EXISTS "${FFTW_ROOT_SOURCE}/lib/libfftw3-3.lib")
+#         set(FFTW_ROOT "${FFTW_ROOT_SOURCE}")
+#         set(FFTW_INCLUDE_DIRS "${FFTW_ROOT}/include")
+#         message(STATUS "Using source FFTW directory: ${FFTW_ROOT}")
+#     else()
+#         # Fallback to system FFTW
+#         find_package(FFTW)
+#         if(FFTW_FOUND)
+#             message(STATUS "Using system FFTW")
+#             set(FFTW_LIBRARIES ${FFTW_LIBRARIES})
+#         else()
+#             message(FATAL_ERROR "FFTW not found! Please install FFTW or check the thirdparty directory.")
+#         endif()
+#     endif()
+# endif()
+
+# Use bundled FFTW from thirdparty
+set(FFTW_ROOT "${CMAKE_SOURCE_DIR}/thirdparty/fftw")
 set(FFTW_INCLUDE_DIRS "${FFTW_ROOT}/include")
 
-# Check if we're in a temporary build directory
-if(NOT EXISTS "${FFTW_ROOT}/lib/libfftw3-3.lib")
-    # Try to find FFTW in the source directory
-    set(FFTW_ROOT_SOURCE "${CMAKE_SOURCE_DIR}/thirdparty/fftw")
-    if(EXISTS "${FFTW_ROOT_SOURCE}/lib/libfftw3-3.lib")
-        set(FFTW_ROOT "${FFTW_ROOT_SOURCE}")
-        set(FFTW_INCLUDE_DIRS "${FFTW_ROOT}/include")
-        message(STATUS "Using source FFTW directory: ${FFTW_ROOT}")
-    else()
-        # Fallback to system FFTW
-        find_package(FFTW)
-        if(FFTW_FOUND)
-            message(STATUS "Using system FFTW")
-            set(FFTW_LIBRARIES ${FFTW_LIBRARIES})
-        else()
-            message(FATAL_ERROR "FFTW not found! Please install FFTW or check the thirdparty directory.")
-        endif()
-    endif()
+if(WIN32)
+    set(FFTW_LIBRARIES "${FFTW_ROOT}/lib/libfftw3-3.lib")
+else()
+    set(FFTW_LIBRARIES "${FFTW_ROOT}/lib/libfftw3.so")
 endif()
+
+# Optional sanity check
+if(NOT EXISTS "${FFTW_LIBRARIES}")
+    message(FATAL_ERROR "Missing FFTW library at: ${FFTW_LIBRARIES}")
+endif()
+##########################################
 
 
 if(WIN32)
