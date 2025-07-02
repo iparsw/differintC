@@ -1,1 +1,1 @@
-__version__ = "0.0.2.3"  # <-- ANY PEP 440 version string allowed
+__version__ = "0.0.2.4"  # <-- ANY PEP 440 version string allowed

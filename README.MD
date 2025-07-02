@@ -1,8 +1,10 @@
+- **Only Windows Support for now!**
+
 # differintC
 
 `differintC` is a high-performance C++ library with Python bindings for computing fractional differintegrals (derivatives and integrals of arbitrary real order) using numerical methods.
 
-This package implements optimized versions of the Riemann–Liouville and Grünwald–Letnikov (GL) fractional differintegral operators, inspired by the original [DifferInt project](https://placeholder-link-to-original-differint-project).
+This package implements optimized versions of the Riemann–Liouville and Grünwald–Letnikov (GL) fractional differintegral operators, inspired by the original [DifferInt project](https://github.com/differint/differint).
 
 > ⚙️ Built with modern C++17 and exposed to Python via `pybind11`, this library is significantly faster than pure-Python equivalents, especially for large arrays and high-precision needs.
 
@@ -14,13 +16,6 @@ This package implements optimized versions of the Riemann–Liouville and Grünw
 pip install differintC
 ````
 
-To build from source:
-
-```bash
-git clone https://github.com/your-username/differintC-project.git
-cd differintC-project
-pip install .
-```
 
 ---
 

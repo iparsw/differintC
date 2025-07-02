@@ -131,15 +131,16 @@ std::vector<T> RL(T alpha,
 // Compute GL coefficients up to order n
 template <typename T>
 std::vector<T> GLcoeffs(T alpha, std::size_t n) {
-    // b[0] = 1
-    std::vector<T> b(n + 1, T(1));
+    std::vector<T> b;
+    b.reserve(n + 1);  // Preallocate memory
+    b.push_back(T(1));  // b0 = 1
+
     for (std::size_t j = 1; j <= n; ++j) {
-        b[j] = b[j - 1] * (static_cast<T>(-alpha) + static_cast<T>(j - 1))
-               / static_cast<T>(j);
+        T j_t = static_cast<T>(j);
+        b.push_back(b.back() * (j_t - 1 - alpha) / j_t);
     }
     return b;
 }
-
 
 // GL at a single point (endpoint)
 template <typename T>
@@ -158,15 +159,31 @@ T GLpoint(T alpha,
     if (f_vals.size() != num_points) {
         throw std::invalid_argument("f_vals size must equal num_points");
     }
-    T step = (domain_end - domain_start) / static_cast<T>(num_points - 1);
-    // Compute coefficients for k = num_points - 1
-    std::size_t k = num_points - 1;
-    auto b = GLcoeffs(alpha, k);
-    T acc = T(0);
-    for (std::size_t j = 0; j <= k; ++j) {
-        acc += b[j] * f_vals[k - j];
+
+    const T step = (domain_end - domain_start) / static_cast<T>(num_points - 1);
+    const T step_power = std::pow(step, -alpha);
+    const std::size_t k = num_points - 1;
+
+    T acc = 0;
+    T c_val = 1.0;  // Initialize to b0 = 1
+    const T* f_ptr = f_vals.data() + k;  // Pointer to last element (f_vals[k])
+
+    for (std::size_t j_index = 0; j_index <= k; ++j_index) {
+        // Add current term: c_val * f_vals[k - j_index]
+        acc += c_val * (*f_ptr);
+
+        // Prepare for next iteration (skip for last element)
+        if (j_index < k) {
+            // Update coefficient using recurrence relation:
+            // c_{j+1} = c_j * ( -alpha + j_index ) / (j_index + 1)
+            c_val *= ( -alpha + static_cast<T>(j_index) ) / static_cast<T>(j_index + 1);
+        }
+
+        // Move pointer backward through f_vals
+        --f_ptr;
     }
-    return std::pow(step, -alpha) * acc;
+
+    return step_power * acc;
 }
 
 // GL over entire grid
