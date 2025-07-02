@@ -130,3 +130,12 @@ def RLpoint(
         >>> RL_poly = RLpoint(0.5, lambda x: x**2 - 4*x - 1, 0., 1., 100)
     """
     ...
+
+
+def GLcoeffs(alpha: float, n: int) -> List[float]:
+    """ Computes the GL coefficient array of size n.
+
+        These coefficients can be used for both the GL
+        and the improved GL algorithm.
+    """
+    ...

@@ -6,11 +6,15 @@
 
 namespace py = pybind11;
 
+//  Add the declaration in module.cpp
+
 namespace differint {
-    std::vector<double> RL(double, const std::vector<double>&, double, double, size_t);
-    double RLpoint(double, const std::vector<double>&, double, double, size_t);
     std::vector<double> GL(double, const std::vector<double>&, double, double, size_t);
+    std::vector<double> RL(double, const std::vector<double>&, double, double, size_t);
     double GLpoint(double, const std::vector<double>&, double, double, size_t);
+    double RLpoint(double, const std::vector<double>&, double, double, size_t);
+
+    std::vector<double> GLcoeffs(double alpha, std::size_t n);
 }
 using namespace differint;
 
@@ -107,4 +111,6 @@ PYBIND11_MODULE(_differintC, m) {
         }
     }, py::arg("alpha"), py::arg("f"), py::arg("domain_start") = 0.0, py::arg("domain_end") = 1.0, py::arg("num_points") = 100);
 
+    m.def("GLcoeffs", &differint::GLcoeffs, py::arg("alpha"), py::arg("n"),
+        "Compute Grünwald-Letnikov coefficients vector");
 }

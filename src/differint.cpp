@@ -278,6 +278,7 @@ template std::vector<double> differint::GL<double>(double, const std::vector<dou
 template std::vector<double> differint::RL<double>(double, const std::vector<double>&, double, double, std::size_t);
 template double differint::GLpoint<double>(double, const std::vector<double>&, double, double, std::size_t);
 template double differint::RLpoint<double>(double, const std::vector<double>&, double, double, std::size_t);
+
 template std::vector<double> differint::GLcoeffs<double>(double, std::size_t);
 
 
@@ -294,5 +295,9 @@ namespace differint {
     }
     double RLpoint(double alpha, const std::vector<double>& f_vals, double a, double b, std::size_t N) {
         return RLpoint<double>(alpha, f_vals, a, b, N);
+    }
+
+    std::vector<double> GLcoeffs(double alpha, std::size_t n) {
+        return GLcoeffs<double>(alpha, n);
     }
 }
