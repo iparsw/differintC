@@ -1,16 +1,33 @@
 #include <pybind11/stl.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include "differint.hpp"
 #include <vector>
 #include <stdexcept>
+#include <fftw3.h>
+
+// Guard to ensure FFTW threading is initialized at module load time
+struct FFTWThreadInit {
+    FFTWThreadInit() { fftw_init_threads(); }
+    ~FFTWThreadInit() { fftw_cleanup_threads(); }
+};
+
+// This static ensures the constructor runs before any function is called
+static FFTWThreadInit fftwThreadInitGuard;
 
 namespace py = pybind11;
 
+
+//  Add the declaration in module.cpp
 namespace differint {
-    std::vector<double> RL(double, const std::vector<double>&, double, double, size_t);
-    double RLpoint(double, const std::vector<double>&, double, double, size_t);
     std::vector<double> GL(double, const std::vector<double>&, double, double, size_t);
+    std::vector<double> GLthread(double, const std::vector<double>&, double, double, size_t);
+    std::vector<double> GLfull(double, const std::vector<double>&, double, double, size_t);
+
+    std::vector<double> RL(double, const std::vector<double>&, double, double, size_t);
+
     double GLpoint(double, const std::vector<double>&, double, double, size_t);
+    double RLpoint(double, const std::vector<double>&, double, double, size_t);
 }
 using namespace differint;
 
@@ -51,6 +68,50 @@ PYBIND11_MODULE(_differintC, m) {
     m.doc() = "Fast fractional calculus operators in C++ with Python bindings";
 
     // RL (whole array)
+    m.def("GL", [](double alpha, py::object f, double domain_start, double domain_end, size_t num_points) {
+        // Dispatch based on type
+        if (py::isinstance<py::array>(f)) {
+            return GL(alpha, prepare_fvals(f.cast<py::array_t<double>>(), num_points), domain_start, domain_end, num_points);
+        } else if (py::isinstance<py::function>(f)) {
+            return GL(alpha, prepare_fvals(f.cast<py::function>(), domain_start, domain_end, num_points), domain_start, domain_end, num_points);
+        } else if (py::isinstance<py::list>(f)) {
+            // treat list as array
+            return GL(alpha, prepare_fvals(f.cast<py::array_t<double>>(), num_points), domain_start, domain_end, num_points);
+        } else {
+            throw std::runtime_error("Unsupported input type for function f");
+        }
+    }, py::arg("alpha"), py::arg("f"), py::arg("domain_start") = 0.0, py::arg("domain_end") = 1.0, py::arg("num_points") = 100);
+
+    m.def("GLthread", [](double alpha, py::object f, double domain_start, double domain_end, size_t num_points) {
+        // Dispatch based on type
+        if (py::isinstance<py::array>(f)) {
+            return GLthread(alpha, prepare_fvals(f.cast<py::array_t<double>>(), num_points), domain_start, domain_end, num_points);
+        } else if (py::isinstance<py::function>(f)) {
+            return GLthread(alpha, prepare_fvals(f.cast<py::function>(), domain_start, domain_end, num_points), domain_start, domain_end, num_points);
+        } else if (py::isinstance<py::list>(f)) {
+            // treat list as array
+            return GLthread(alpha, prepare_fvals(f.cast<py::array_t<double>>(), num_points), domain_start, domain_end, num_points);
+        } else {
+            throw std::runtime_error("Unsupported input type for function f");
+        }
+    }, py::arg("alpha"), py::arg("f"), py::arg("domain_start") = 0.0, py::arg("domain_end") = 1.0, py::arg("num_points") = 100);
+
+    m.def("GLfull", [](double alpha, py::object f, double domain_start, double domain_end, size_t num_points) {
+        // Dispatch based on type
+        if (py::isinstance<py::array>(f)) {
+            return GLfull(alpha, prepare_fvals(f.cast<py::array_t<double>>(), num_points), domain_start, domain_end, num_points);
+        } else if (py::isinstance<py::function>(f)) {
+            return GLfull(alpha, prepare_fvals(f.cast<py::function>(), domain_start, domain_end, num_points), domain_start, domain_end, num_points);
+        } else if (py::isinstance<py::list>(f)) {
+            // treat list as array
+            return GLfull(alpha, prepare_fvals(f.cast<py::array_t<double>>(), num_points), domain_start, domain_end, num_points);
+        } else {
+            throw std::runtime_error("Unsupported input type for function f");
+        }
+    }, py::arg("alpha"), py::arg("f"), py::arg("domain_start") = 0.0, py::arg("domain_end") = 1.0, py::arg("num_points") = 100);
+
+
+    // RL (whole array)
     m.def("RL", [](double alpha, py::object f, double domain_start, double domain_end, size_t num_points) {
         // Dispatch based on type
         if (py::isinstance<py::array>(f)) {
@@ -64,6 +125,7 @@ PYBIND11_MODULE(_differintC, m) {
             throw std::runtime_error("Unsupported input type for function f");
         }
     }, py::arg("alpha"), py::arg("f"), py::arg("domain_start") = 0.0, py::arg("domain_end") = 1.0, py::arg("num_points") = 100);
+
 
     // RLpoint (single point)
     m.def("RLpoint", [](double alpha, py::object f, double domain_start, double domain_end, size_t num_points) {
@@ -80,20 +142,6 @@ PYBIND11_MODULE(_differintC, m) {
 
 
 
-    m.def("GL", [](double alpha, py::object f, double domain_start, double domain_end, size_t num_points) {
-        // Dispatch based on type
-        if (py::isinstance<py::array>(f)) {
-            return GL(alpha, prepare_fvals(f.cast<py::array_t<double>>(), num_points), domain_start, domain_end, num_points);
-        } else if (py::isinstance<py::function>(f)) {
-            return GL(alpha, prepare_fvals(f.cast<py::function>(), domain_start, domain_end, num_points), domain_start, domain_end, num_points);
-        } else if (py::isinstance<py::list>(f)) {
-            // treat list as array
-            return GL(alpha, prepare_fvals(f.cast<py::array_t<double>>(), num_points), domain_start, domain_end, num_points);
-        } else {
-            throw std::runtime_error("Unsupported input type for function f");
-        }
-    }, py::arg("alpha"), py::arg("f"), py::arg("domain_start") = 0.0, py::arg("domain_end") = 1.0, py::arg("num_points") = 100);
-
     // GLpoint (single point)
     m.def("GLpoint", [](double alpha, py::object f, double domain_start, double domain_end, size_t num_points) {
         if (py::isinstance<py::array>(f)) {
@@ -107,4 +155,6 @@ PYBIND11_MODULE(_differintC, m) {
         }
     }, py::arg("alpha"), py::arg("f"), py::arg("domain_start") = 0.0, py::arg("domain_end") = 1.0, py::arg("num_points") = 100);
 
+    m.def("GLcoeffs", &differint::GLcoeffs, py::arg("alpha"), py::arg("n"),
+        "Compute Grünwald-Letnikov coefficients vector");
 }
