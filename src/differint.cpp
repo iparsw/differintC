@@ -8,6 +8,12 @@
 #include <algorithm>
 #include <type_traits>
 #include <fftw3.h>
+#include <thread>
+
+// explicit template instantiation
+namespace differint {
+    template std::vector<double> GLcoeffs<double>(double, std::size_t);
+}
 
 namespace differint {
 
@@ -125,22 +131,6 @@ std::vector<T> RL(T alpha,
     return result;
 }
 
-
-
-
-// Compute GL coefficients up to order n
-template <typename T>
-std::vector<T> GLcoeffs(T alpha, std::size_t n) {
-    std::vector<T> b;
-    b.reserve(n + 1);  // Preallocate memory
-    b.push_back(T(1));  // b0 = 1
-
-    for (std::size_t j = 1; j <= n; ++j) {
-        T j_t = static_cast<T>(j);
-        b.push_back(b.back() * (j_t - 1 - alpha) / j_t);
-    }
-    return b;
-}
 
 // GL at a single point (endpoint)
 template <typename T>
@@ -276,6 +266,90 @@ std::vector<T> GL(
 }
 
 
+template <typename T>
+std::vector<T> GLthread(
+    T alpha,
+    const std::vector<T>& f_vals,
+    T domain_start,
+    T domain_end,
+    std::size_t num_points)
+{
+    if (num_points < 1) throw std::invalid_argument("num_points must be at least 1");
+    if (f_vals.size() != num_points) throw std::invalid_argument("f_vals size must equal num_points");
+    if (domain_start > domain_end) std::swap(domain_start, domain_end);
+
+    const T step = (domain_end - domain_start) / static_cast<T>(num_points - 1);
+    const auto b = GLcoeffs(alpha, num_points - 1);
+
+    // Direct convolution for small input
+    if (!std::is_same<T, double>::value || num_points < 256) {
+        std::vector<T> result(num_points, T(0));
+        for (std::size_t i = 0; i < num_points; ++i) {
+            T acc = T(0);
+            for (std::size_t j = 0; j <= i; ++j) {
+                acc += b[j] * f_vals[i - j];
+            }
+            result[i] = std::pow(step, -alpha) * acc;
+        }
+        return result;
+    }
+
+    // FFT-based convolution (size = num_points)
+    const int N = static_cast<int>(num_points);
+
+    double* in1 = static_cast<double*>(fftw_malloc(sizeof(double) * N));
+    double* in2 = static_cast<double*>(fftw_malloc(sizeof(double) * N));
+    fftw_complex* out1 = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * (N/2 + 1)));
+    fftw_complex* out2 = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * (N/2 + 1)));
+    fftw_complex* out_prod = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * (N/2 + 1)));
+    double* conv_result = static_cast<double*>(fftw_malloc(sizeof(double) * N));
+
+    std::copy(b.begin(), b.end(), in1);
+    std::fill(in1 + b.size(), in1 + N, 0.0);
+
+    std::copy(f_vals.begin(), f_vals.end(), in2);
+    std::fill(in2 + f_vals.size(), in2 + N, 0.0);
+
+    // Enable FFTW threading & create plans with MEASURE
+    int nthreads = std::thread::hardware_concurrency();
+    if (nthreads < 1) nthreads = 1;
+    fftw_plan_with_nthreads(nthreads);
+
+    fftw_plan p1 = fftw_plan_dft_r2c_1d(N, in1, out1, FFTW_ESTIMATE);
+    fftw_plan p2 = fftw_plan_dft_r2c_1d(N, in2, out2, FFTW_ESTIMATE);
+    fftw_plan p_inv = fftw_plan_dft_c2r_1d(N, out_prod, conv_result, FFTW_ESTIMATE);
+
+    fftw_execute(p1);
+    fftw_execute(p2);
+
+    for (int i = 0; i <= N / 2; ++i) {
+        out_prod[i][0] = out1[i][0] * out2[i][0] - out1[i][1] * out2[i][1];
+        out_prod[i][1] = out1[i][0] * out2[i][1] + out1[i][1] * out2[i][0];
+    }
+
+    fftw_execute(p_inv);
+
+    const double scale = 1.0 / N;
+    const T step_power = std::pow(step, -alpha);
+
+    std::vector<T> result(num_points);
+    for (int i = 0; i < N; ++i) {
+        result[i] = static_cast<T>(conv_result[i] * scale) * step_power;
+    }
+
+    fftw_destroy_plan(p1);
+    fftw_destroy_plan(p2);
+    fftw_destroy_plan(p_inv);
+    fftw_free(in1);
+    fftw_free(in2);
+    fftw_free(out1);
+    fftw_free(out2);
+    fftw_free(out_prod);
+    fftw_free(conv_result);
+
+    return result;
+}
+
 
 
 template <typename T>
@@ -364,17 +438,26 @@ std::vector<T> GLfull(T alpha,
 
 // Explicit instantiations for double
 template std::vector<double> differint::GL<double>(double, const std::vector<double>&, double, double, std::size_t);
+template std::vector<double> differint::GLthread<double>(double, const std::vector<double>&, double, double, std::size_t);
+template std::vector<double> differint::GLfull<double>(double, const std::vector<double>&, double, double, std::size_t);
+
 template std::vector<double> differint::RL<double>(double, const std::vector<double>&, double, double, std::size_t);
+
 template double differint::GLpoint<double>(double, const std::vector<double>&, double, double, std::size_t);
 template double differint::RLpoint<double>(double, const std::vector<double>&, double, double, std::size_t);
 
-template std::vector<double> differint::GLcoeffs<double>(double, std::size_t);
 
 
 // Expose concrete symbols
 namespace differint {
     std::vector<double> GL(double alpha, const std::vector<double>& f_vals, double a, double b, std::size_t N) {
         return GL<double>(alpha, f_vals, a, b, N);
+    }
+    std::vector<double> GLthread(double alpha, const std::vector<double>& f_vals, double a, double b, std::size_t N) {
+        return GLthread<double>(alpha, f_vals, a, b, N);
+    }
+    std::vector<double> GLfull(double alpha, const std::vector<double>& f_vals, double a, double b, std::size_t N) {
+        return GLthread<double>(alpha, f_vals, a, b, N);
     }
     std::vector<double> RL(double alpha, const std::vector<double>& f_vals, double a, double b, std::size_t N) {
         return RL<double>(alpha, f_vals, a, b, N);
@@ -385,7 +468,10 @@ namespace differint {
     double RLpoint(double alpha, const std::vector<double>& f_vals, double a, double b, std::size_t N) {
         return RLpoint<double>(alpha, f_vals, a, b, N);
     }
+}
 
+namespace differint {
+    // Concrete definition for double for linkage (required for pybind11)
     std::vector<double> GLcoeffs(double alpha, std::size_t n) {
         return GLcoeffs<double>(alpha, n);
     }
