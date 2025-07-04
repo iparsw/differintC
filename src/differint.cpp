@@ -15,6 +15,8 @@ namespace differint {
     template std::vector<double> GLcoeffs<double>(double, std::size_t);
 }
 
+// --------------------------- Implementation ---------------------------- //
+
 namespace differint {
 
 template <typename T>
@@ -70,7 +72,7 @@ T RLpoint(T alpha,
     }
 
     return C * std::pow(step, -alpha) * result;
-}
+} // RLpoint End
 
 
 // RL entire-grid implementation
@@ -129,7 +131,7 @@ std::vector<T> RL(T alpha,
         result[i] = C * std::pow(step, -alpha) * acc;
     }
     return result;
-}
+} // RL End
 
 
 // GL at a single point (endpoint)
@@ -174,7 +176,7 @@ T GLpoint(T alpha,
     }
 
     return step_power * acc;
-}
+} // GLpoint End
 
 // GL over entire grid
 // Optimized GL implementation with FFT acceleration
@@ -263,7 +265,7 @@ std::vector<T> GL(
     fftw_free(conv_result);
 
     return result;
-}
+} // GL End
 
 
 template <typename T>
@@ -348,7 +350,7 @@ std::vector<T> GLthread(
     fftw_free(conv_result);
 
     return result;
-}
+} // GLthread End
 
 
 
@@ -432,7 +434,11 @@ std::vector<T> GLfull(T alpha,
     fftw_free(conv_result);
 
     return result;
-}
+
+} // GLfull End
+
+// ------------------------- Implementation End -------------------------- //
+
 
 } // namespace differint
 
