@@ -4,7 +4,7 @@
 ### ~~0.0.2.2:~~ problematic
 ## 0.0.2.3: (6/2/2025) Optimized GL implementation with FFT acceleration
 
-bench_1 Result:
+[Benchmark](https://github.com/iparsw/differintC/blob/main/BENCHMARK.md) Result:
 
 | count | GL          |  RL         | GLpoint     | RLpoint    |
 | ----- | ----------- | ----------- | ----------- | ---------- |
@@ -24,7 +24,7 @@ bench_1 Result:
 - GLcoeffs optimization
 
 
-bench_1 Result for GLpoint and comparison to original differint package (1.0.0):
+[Benchmark](https://github.com/iparsw/differintC/blob/main/BENCHMARK.md) Result for GLpoint and comparison to original differint package (1.0.0):
 
 | count |  0.0.2.3    |  0.0.2.4    | differint   |
 | ----- | ----------- | ----------- | ----------- |
@@ -45,7 +45,7 @@ bench_1 Result for GLpoint and comparison to original differint package (1.0.0):
 - Updated documentation and examples for all versions.
 - docs were moved to github wikis
 
-bench_1 Result for GL
+[Benchmark](https://github.com/iparsw/differintC/blob/main/BENCHMARK.md) Result for GL:
 
 | count |  0.0.2.3    | new GL      | new Glthread |
 | ----- | ----------- | ----------- | -----------  |
