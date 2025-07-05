@@ -1,4 +1,6 @@
 - **Only Windows Support for now!**
+- There is also a more complete version implemented in Pure python [diffeintP](https://github.com/iparsw/differintP)
+
 
 # differintC
 
